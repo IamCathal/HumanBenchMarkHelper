@@ -1,21 +1,68 @@
-wordArr = []
-userInput = ""
-i = 0 
+from pynput.mouse import Button, Controller
+from PIL import Image
+import pyscreenshot
+import pytesseract
+import sys
+import re
 
-while (userInput != "x"):
-    print("Enter word", end=" ")
-    print(i, end=" ")
-    userInput = input(": ")
-    i += 1
-    if ( i > 1):
-        if userInput in wordArr:
-            print("",userInput," alreay exists in the array.")
+
+def getWord(filename):
+    text = pytesseract.image_to_string(Image.open(filename))
+    if re.search('(See how you compare)+', text):
+        print('Error: Unexpected end of game.')
+        exit()
+    else:
+        return text
+
+
+def screenshot():
+    region = pyscreenshot.grab(bbox=(700,390,1250,450))
+    region.save('currentWord.png')
+
+
+def isNew(currentWord, allWords, seenWords, totalWords):
+    if currentWord in allWords:
+        return 0
+    else:
+        allWords.append(currentWord)
+        return 1
+
+    
+def playGame(allWords, userLevel):
+    mouse = Controller()
+    seenWords = 0
+    for i in range(1,userLevel):
+        screenshot()
+        subject = getWord('currentWord.png')
+        # if new
+        if isNew(subject, allWords, seenWords, i):
+            mouse.position = (1030,505)
+            mouse.click(Button.left, 1)
+        # if seen
         else:
-            wordArr.append(userInput)
-        
+            seenWords += 1
+            mouse.position = (870, 505)
+            mouse.click(Button.left, 1)
+        percentage = 0
+        percentage = float(seenWords/i)*100
+        sys.stdout.write('\r{:.2f}% overall duplicates'.format(percentage))
+        sys.stdout.flush()
+            
 
-wordArr.remove('x')
-
-print("Here is the list of unique words: ")
-for elem in wordArr:
-    print(elem)
+def main():
+    allWords = list()
+    mouse = Controller()
+    userLevel = int(input('What level would you like to reach: '))
+    if userLevel < 2:
+        print('Error: defaulting to 10')
+        userLevel = 10
+    mouse.position = (950, 610)
+    mouse.click(Button.left, 1)
+    try:
+        playGame(allWords, userLevel)
+    except KeyboardInterrupt:
+        exit()
+    
+   
+if __name__ == '__main__':
+    main()
