@@ -20,7 +20,7 @@ def screenshot():
     region.save('currentWord.png')
 
 
-def isNew(currentWord, allWords, seenWords, totalWords):
+def isNew(currentWord, allWords):
     if currentWord in allWords:
         return 0
     else:
@@ -35,7 +35,7 @@ def playGame(allWords, userLevel):
         screenshot()
         subject = getWord('currentWord.png')
         # if new
-        if isNew(subject, allWords, seenWords, i):
+        if isNew(subject, allWords):
             mouse.position = (1030,505)
             mouse.click(Button.left, 1)
         # if seen
